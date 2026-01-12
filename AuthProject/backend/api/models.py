@@ -42,3 +42,21 @@ class Wire(models.Model):
     length_meters = models.FloatField()
     status = models.CharField(max_length=50, default="Active")
     def __str__(self): return self.cable_id
+
+# --- PASTE THIS AT THE BOTTOM OF api/models.py ---
+
+class Voyage(models.Model):
+    # This links the voyage to a specific Vessel
+    vessel = models.ForeignKey(Vessel, on_delete=models.CASCADE, related_name='voyages')
+    port_from = models.CharField(max_length=100)
+    port_to = models.CharField(max_length=100)
+    departure_time = models.DateTimeField()
+    arrival_time = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20, 
+        choices=[('Scheduled', 'Scheduled'), ('In Transit', 'In Transit'), ('Arrived', 'Arrived'), ('Delayed', 'Delayed')],
+        default='Scheduled'
+    )
+
+    def __str__(self):
+        return f"{self.vessel.name}: {self.port_from} -> {self.port_to}"

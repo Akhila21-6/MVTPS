@@ -6,12 +6,13 @@ import {
   FaSignOutAlt, FaExclamationTriangle, FaWind, FaSkullCrossbones, 
   FaAnchor, FaThLarge, FaClipboardList, FaCompass, 
   FaCheckSquare, FaFilter, FaSyncAlt, FaChartBar, FaLock, FaToggleOn, 
-  FaInfoCircle, FaEye, FaEyeSlash, FaPlus, FaSlidersH, FaCircle, 
-  FaArrowDown, FaArrowUp, FaExchangeAlt, FaRegBell, FaTrash, FaSpinner, FaExternalLinkAlt 
+  FaInfoCircle, FaEye, FaEyeSlash, FaPlus, FaSlidersH, 
+  FaArrowDown, FaExchangeAlt, FaRegBell, FaTrash, FaSpinner, 
+  FaExternalLinkAlt, FaClock 
 } from "react-icons/fa";
 import { 
   BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell, YAxis, CartesianGrid, 
-  LineChart, Line, Legend, AreaChart, Area 
+  Legend, AreaChart, Area 
 } from 'recharts';
 import MapComponent from "./MapComponent";
 
@@ -24,6 +25,83 @@ const alerts = [
 ];
 
 const bgImage = "https://images.unsplash.com/photo-1559297434-fae8a1916a79?q=80&w=2070&auto=format&fit=crop";
+
+// --- NEW VOYAGES VIEW COMPONENT ---
+const VoyagesView = () => {
+  const [voyages, setVoyages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/voyages/')
+      .then(res => res.json())
+      .then(data => {
+        setVoyages(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        // Fallback data if backend is not connected
+        setVoyages([
+           { id: 1, vessel_name: "Ever Given", port_from: "Singapore", port_to: "Rotterdam", departure_time: "2023-10-01", status: "In Transit" },
+           { id: 2, vessel_name: "Maersk Ohio", port_from: "Shanghai", port_to: "Los Angeles", departure_time: "2023-09-28", status: "Arrived" },
+        ]);
+        setLoading(false);
+      });
+  }, []);
+
+  return (
+    <div style={{ padding: "30px", width: "100%", maxWidth: "1400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "30px" }}>
+       <div>
+           <h2 style={{ color: "#0f172a", marginBottom: "5px", fontSize: "2rem" }}>Voyage Schedule</h2>
+           <p style={{ color: "#64748b", margin: 0 }}>Active and scheduled vessel movements.</p>
+       </div>
+       <div style={{ background: "white", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+          {loading ? (
+             <p>Loading data...</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+               <thead>
+                 <tr style={{ background: "#f8fafc", textAlign: "left" }}>
+                   <th style={{ padding: "15px", color: "#64748b", fontSize: "0.85rem", textTransform: "uppercase" }}>Vessel</th>
+                   <th style={{ padding: "15px", color: "#64748b", fontSize: "0.85rem", textTransform: "uppercase" }}>Route</th>
+                   <th style={{ padding: "15px", color: "#64748b", fontSize: "0.85rem", textTransform: "uppercase" }}>Departure</th>
+                   <th style={{ padding: "15px", color: "#64748b", fontSize: "0.85rem", textTransform: "uppercase" }}>Status</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {voyages.map((voyage) => (
+                   <tr key={voyage.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                     <td style={{ padding: "15px", fontWeight: "bold", color: "#0f172a" }}><FaShip style={{marginRight:"8px", color:"#3b82f6"}}/> {voyage.vessel_name}</td>
+                     <td style={{ padding: "15px", color: "#475569" }}>
+                        <div style={{display:"flex", alignItems:"center", gap:"5px"}}>
+                           <span style={{fontWeight:"600"}}>{voyage.port_from}</span> 
+                           <span style={{color:"#94a3b8"}}>→</span> 
+                           <span style={{fontWeight:"600"}}>{voyage.port_to}</span>
+                        </div>
+                     </td>
+                     <td style={{ padding: "15px", color: "#475569" }}>
+                        <div style={{display:"flex", alignItems:"center", gap:"5px"}}>
+                           <FaClock color="#94a3b8"/> {new Date(voyage.departure_time).toLocaleDateString()}
+                        </div>
+                     </td>
+                     <td style={{ padding: "15px" }}>
+                       <span style={{ 
+                          padding: "6px 12px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "bold",
+                          background: voyage.status === 'Arrived' ? '#dcfce7' : '#ffedd5',
+                          color: voyage.status === 'Arrived' ? '#166534' : '#9a3412'
+                       }}>
+                         {voyage.status}
+                       </span>
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
+            </table>
+          )}
+       </div>
+    </div>
+  );
+};
 
 // --- COMPONENTS ---
 
@@ -61,7 +139,6 @@ const NotificationPanel = ({ notifications, onClose, onClear }) => {
 
 const AlertSettingsModal = ({ isOpen, onClose, vessel, isSubscribed, onToggleSubscription }) => {
   if (!isOpen || !vessel) return null;
-
   return (
     <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100 }}>
       <div style={{ background: "white", width: "400px", borderRadius: "12px", padding: "25px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)" }}>
@@ -70,29 +147,14 @@ const AlertSettingsModal = ({ isOpen, onClose, vessel, isSubscribed, onToggleSub
             <FaTimes style={{ cursor: "pointer", color: "#94a3b8" }} onClick={onClose} />
          </div>
          <h4 style={{margin:"0 0 15px 0", color:"#1e293b"}}>{vessel.name}</h4>
-         
          <div style={{ background: isSubscribed ? "#f0fdf4" : "#f8fafc", padding: "15px", borderRadius: "8px", border: isSubscribed ? "1px solid #bbf7d0" : "1px solid #e2e8f0", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor:"pointer" }} onClick={() => onToggleSubscription(vessel.id)}>
             <div>
-                <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: isSubscribed ? "#166534" : "#64748b" }}>
-                    {isSubscribed ? "Alerts Active" : "Alerts Disabled"}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: isSubscribed ? "#15803d" : "#94a3b8" }}>
-                    {isSubscribed ? "You are receiving live updates" : "Click to enable notifications"}
-                </div>
+                <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: isSubscribed ? "#166534" : "#64748b" }}>{isSubscribed ? "Alerts Active" : "Alerts Disabled"}</div>
+                <div style={{ fontSize: "0.75rem", color: isSubscribed ? "#15803d" : "#94a3b8" }}>{isSubscribed ? "You are receiving live updates" : "Click to enable notifications"}</div>
             </div>
             <FaToggleOn size={30} color={isSubscribed ? "#16a34a" : "#cbd5e1"} style={{transform: isSubscribed ? "none" : "rotate(180deg)", transition: "all 0.3s"}} />
          </div>
-
-         <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", fontSize: "0.85rem", color: "#64748b", marginBottom: "8px", fontWeight: "600" }}>Notification Type</label>
-            <select disabled={!isSubscribed} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.9rem", color: "#334155", background: isSubscribed ? "white" : "#f1f5f9" }}>
-                <option>All Events (Weather, Delay, Route)</option>
-                <option>Critical Only (Piracy, Mayday)</option>
-            </select>
-         </div>
-         <button onClick={onClose} style={{ width: "100%", background: "#0f172a", color: "white", border: "none", padding: "12px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}>
-            Done
-         </button>
+         <button onClick={onClose} style={{ width: "100%", background: "#0f172a", color: "white", border: "none", padding: "12px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}>Done</button>
       </div>
     </div>
   );
@@ -101,7 +163,6 @@ const AlertSettingsModal = ({ isOpen, onClose, vessel, isSubscribed, onToggleSub
 const ProfileModal = ({ isOpen, onClose, onLogout, userProfile }) => {
   const [showPassword, setShowPassword] = useState(false);
   if (!isOpen) return null;
-
   return (
     <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(15, 23, 42, 0.85)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200 }}>
       <div style={{ background: "white", width: "600px", padding: "40px", borderRadius: "16px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #e2e8f0" }}>
@@ -109,25 +170,7 @@ const ProfileModal = ({ isOpen, onClose, onLogout, userProfile }) => {
            <div><h2 style={{ margin: 0, color: "#0f172a", fontSize: "1.5rem" }}>Edit Profile</h2><p style={{ margin: "5px 0 0 0", color: "#64748b", fontSize: "0.85rem" }}>Manage your account settings and preferences</p></div>
            <button onClick={onClose} style={{border:"none", background:"#f1f5f9", borderRadius: "50%", width:"32px", height:"32px", cursor:"pointer", color:"#64748b", display:"flex", alignItems:"center", justifyContent:"center"}}><FaTimes /></button>
         </div>
-        <div style={{ background: "#fff7ed", borderLeft: "4px solid #f97316", borderRadius: "4px", padding: "15px", marginBottom: "25px", display: "flex", gap: "15px", alignItems: "flex-start" }}>
-           <FaInfoCircle color="#f97316" style={{ marginTop: "4px" }} />
-           <div><div style={{ color: "#9a3412", fontWeight: "bold", fontSize: "0.9rem" }}>System Notice: Limited Access</div><div style={{ color: "#c2410c", fontSize: "0.8rem", marginTop: "4px", lineHeight: "1.4" }}>Your current role as <strong>{userProfile.role}</strong> restricts modification of sensitive data. Please contact the IT Admin for role escalation.</div></div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
-           <div><label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "6px", fontWeight: "700", textTransform: "uppercase" }}>Username</label><input type="text" value={userProfile.name} disabled style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.95rem", background: "#f8fafc", color: "#334155", boxSizing:"border-box" }} /></div>
-           <div><label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "6px", fontWeight: "700", textTransform: "uppercase" }}>Email Address</label><input type="text" value="user@mvtps.com" disabled style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.95rem", background: "#f8fafc", color: "#334155", boxSizing:"border-box" }} /></div>
-        </div>
-        <div style={{ marginBottom: "20px" }}>
-           <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "6px", fontWeight: "700", textTransform: "uppercase" }}>Role Assignment</label>
-           <div style={{ background: "#f0f9ff", padding: "12px", borderRadius: "8px", border: "1px solid #bae6fd", color: "#0369a1", fontWeight: "bold", display: "flex", alignItems: "center", gap: "10px" }}><FaLock size={12} /> {userProfile.role}</div>
-        </div>
-        <div style={{ marginBottom: "30px" }}>
-           <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "6px", fontWeight: "700", textTransform: "uppercase" }}>Security Password</label>
-           <div style={{ position: "relative" }}>
-             <input type={showPassword ? "text" : "password"} value="SecretPassword123" disabled style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#334155", boxSizing:"border-box" }} />
-             <div onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "15px", top: "14px", color: "#94a3b8", cursor: "pointer" }}>{showPassword ? <FaEyeSlash /> : <FaEye />}</div>
-           </div>
-        </div>
+        <div style={{ marginBottom: "20px" }}><div style={{ background: "#f0f9ff", padding: "12px", borderRadius: "8px", border: "1px solid #bae6fd", color: "#0369a1", fontWeight: "bold", display: "flex", alignItems: "center", gap: "10px" }}><FaLock size={12} /> {userProfile.role}</div></div>
         <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "25px", display: "flex", justifyContent: "space-between", gap: "10px" }}>
            <button onClick={onLogout} style={{ background: "#fff1f2", border: "1px solid #fecdd3", color: "#e11d48", padding: "10px 25px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", display:"flex", alignItems:"center", gap:"8px" }}><FaSignOutAlt /> Sign Out</button>
            <button onClick={onClose} style={{ background: "#0f172a", border: "none", color: "white", padding: "10px 30px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}>Save Changes</button>
@@ -150,90 +193,32 @@ const ProfileView = ({ onEnterDashboard, userProfile }) => {
   );
 };
 
-// 4. PORTS ANALYTICS VIEW (UPDATED)
+// --- UPDATED PORTS ANALYTICS VIEW ---
 const PortsAnalyticsView = ({ portData, tradeData }) => {
   return (
     <div style={{ padding: "30px", width: "100%", maxWidth: "1400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "30px", height: "100%", overflowY: "auto" }}>
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-        <div>
-           <h2 style={{ color: "#0f172a", marginBottom: "5px", fontSize: "2rem" }}>Port Analytics & UNCTAD Stats</h2>
-           <p style={{ color: "#64748b", margin: 0 }}>Real-time UNCTAD trade statistics, congestion, and connectivity monitoring.</p>
-        </div>
-        <a href="https://unctadstat.unctad.org/datacentre/" target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none", background: "#0ea5e9", color: "white", padding: "10px 20px", borderRadius: "8px", fontWeight: "bold", display:"flex", alignItems:"center", gap:"10px" }}>
-            <FaExternalLinkAlt /> UNCTAD Data Source
-        </a>
+        <div><h2 style={{ color: "#0f172a", marginBottom: "5px", fontSize: "2rem" }}>Port Analytics & UNCTAD Stats</h2><p style={{ color: "#64748b", margin: 0 }}>Real-time UNCTAD trade statistics, congestion, and connectivity monitoring.</p></div>
+        <a href="https://unctadstat.unctad.org/datacentre/" target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none", background: "#0ea5e9", color: "white", padding: "10px 20px", borderRadius: "8px", fontWeight: "bold", display:"flex", alignItems:"center", gap:"10px" }}><FaExternalLinkAlt /> UNCTAD Data Source</a>
       </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "25px" }}>
-         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Global Average Wait Time</div>
-            <div style={{ fontSize: "2rem", color: "#0f172a", fontWeight: "bold", margin: "10px 0" }}>18.5 Hrs</div>
-            <div style={{ color: "#16a34a", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "5px" }}><FaArrowDown /> 2.1% from last week</div>
-         </div>
-         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Connectivity Index (LSCI)</div>
-            <div style={{ fontSize: "2rem", color: "#2563eb", fontWeight: "bold", margin: "10px 0" }}>142.5</div>
-            <div style={{ color: "#2563eb", fontSize: "0.8rem" }}>UNCTAD Top Tier</div>
-         </div>
-         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Port Efficiency Score</div>
-            <div style={{ fontSize: "2rem", color: "#16a34a", fontWeight: "bold", margin: "10px 0" }}>87/100</div>
-            <div style={{ color: "#64748b", fontSize: "0.8rem" }}>Based on Throughput</div>
-         </div>
+         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}><div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Global Average Wait Time</div><div style={{ fontSize: "2rem", color: "#0f172a", fontWeight: "bold", margin: "10px 0" }}>18.5 Hrs</div></div>
+         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}><div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Connectivity Index (LSCI)</div><div style={{ fontSize: "2rem", color: "#2563eb", fontWeight: "bold", margin: "10px 0" }}>142.5</div></div>
+         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}><div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Port Efficiency Score</div><div style={{ fontSize: "2rem", color: "#16a34a", fontWeight: "bold", margin: "10px 0" }}>87/100</div></div>
       </div>
-
-      {/* CHARTS ROW 1 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "25px", minHeight: "300px" }}>
-         <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <h4 style={{ margin: "0 0 20px 0", color: "#334155", display: "flex", alignItems: "center", gap: "10px" }}><FaExchangeAlt /> Trade Volume (Imports vs Exports)</h4>
-            <ResponsiveContainer width="100%" height={250}>
-               <AreaChart data={tradeData}>
-                  <defs>
-                    <linearGradient id="colorImport" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorExport" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Legend />
-                  <Area type="monotone" dataKey="import" stroke="#8884d8" fillOpacity={1} fill="url(#colorImport)" />
-                  <Area type="monotone" dataKey="export" stroke="#82ca9d" fillOpacity={1} fill="url(#colorExport)" />
-               </AreaChart>
-            </ResponsiveContainer>
-         </div>
-         <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <h4 style={{ margin: "0 0 20px 0", color: "#334155" }}>Average Vessel Wait Time (Hrs)</h4>
-            <ResponsiveContainer width="100%" height={250}>
-               <BarChart data={portData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="wait" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40}>
-                    {portData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.wait > 30 ? '#ef4444' : '#3b82f6'} />
-                    ))}
-                  </Bar>
-               </BarChart>
-            </ResponsiveContainer>
-         </div>
+         <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}><h4 style={{ margin: "0 0 20px 0", color: "#334155" }}>Trade Volume</h4><ResponsiveContainer width="100%" height={250}><AreaChart data={tradeData}><XAxis dataKey="month" /><YAxis /><CartesianGrid strokeDasharray="3 3" /><Tooltip /><Area type="monotone" dataKey="import" stroke="#8884d8" fill="#8884d8" /></AreaChart></ResponsiveContainer></div>
+         <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}><h4 style={{ margin: "0 0 20px 0", color: "#334155" }}>Vessel Wait Time</h4><ResponsiveContainer width="100%" height={250}><BarChart data={portData}><XAxis dataKey="name" /><YAxis /><Bar dataKey="wait" fill="#3b82f6" /></BarChart></ResponsiveContainer></div>
       </div>
-
-      {/* CHARTS ROW 2 - ADDED ARRIVALS/DEPARTURES */}
+      
+      {/* --- ADDED ARRIVAL/DEPARTURE CHART HERE --- */}
       <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-         <h4 style={{ margin: "0 0 20px 0", color: "#334155", display: "flex", alignItems: "center", gap: "10px" }}><FaSyncAlt /> Port Traffic Flow (Arrivals vs Departures)</h4>
-         <div style={{ width: "100%", height: "250px" }}>
+         <h4 style={{ margin: "0 0 20px 0", color: "#334155", display: "flex", alignItems: "center", gap: "10px" }}><FaSyncAlt /> Traffic Flow (Arrivals vs Departures)</h4>
+         <div style={{ width: "100%", height: "300px" }}>
             <ResponsiveContainer>
                <BarChart data={portData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{fontSize: 12}} />
+                  <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
@@ -248,36 +233,16 @@ const PortsAnalyticsView = ({ portData, tradeData }) => {
 };
 
 const HomeCardsView = ({ setActiveTab, portData }) => {
-  const cardStyle = {
-    background: "white", borderRadius: "12px", padding: "25px", cursor: "pointer",
-    transition: "transform 0.2s, boxShadow 0.2s", border: "1px solid #e2e8f0",
-    display: "flex", flexDirection: "column", justifyContent: "space-between", height: "140px",
-    boxShadow: "0 4px 6px rgba(0,0,0,0.05)"
-  };
-
+  const cardStyle = { background: "white", borderRadius: "12px", padding: "25px", cursor: "pointer", transition: "transform 0.2s", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", justifyContent: "space-between", height: "140px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" };
   return (
     <div style={{ padding: "30px", width: "100%", maxWidth: "1400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "30px" }}>
-      <div>
-        <h2 style={{ color: "#0f172a", marginBottom: "10px", fontSize: "2.5rem" }}>Welcome, Admin Dashboard</h2>
-        <p style={{ color: "#64748b", margin: 0, fontSize: "1.2rem", fontWeight: "500" }}>Overview of key operational metrics and alerts.</p>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "25px" }}>
-        <div style={cardStyle} onClick={() => setActiveTab('Live Tracking')}><div><FaShip size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Live Tracking</div><div style={{fontSize: "0.9rem", color: "#64748b", marginTop: "5px"}}>Real-time map</div></div></div>
-        <div style={cardStyle} onClick={() => setActiveTab('Vessels')}><div><FaClipboardList size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Vessels Database</div><div style={{fontSize: "0.9rem", color: "#64748b", marginTop: "5px"}}>Fleet details</div></div></div>
-        <div style={cardStyle} onClick={() => setActiveTab('Ports')}><div><FaAnchor size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Ports</div><div style={{fontSize: "0.9rem", color: "#64748b", marginTop: "5px"}}>Port management</div></div></div>
-        <div style={cardStyle} onClick={() => setActiveTab('Vessels')}><div><FaBell size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Notifications</div><div style={{fontSize: "0.9rem", color: "#64748b", marginTop: "5px"}}>System alerts</div></div></div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "25px", height: "350px" }}>
-         <div style={{ background: "white", borderRadius: "12px", padding: "25px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <h4 style={{ margin: "0 0 20px 0", color: "#334155", display: "flex", alignItems: "center", gap: "10px" }}><FaChartBar /> Port Congestion Analysis</h4>
-            <div style={{ width: "100%", height: "250px" }}>
-              <ResponsiveContainer><BarChart data={portData}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="name" tick={{fontSize: 12}} /><YAxis /><Tooltip /><Bar dataKey="wait" name="Wait Time (Hrs)" fill="#3b82f6" radius={[4, 4, 0, 0]}>{portData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.wait > 30 ? '#ef4444' : '#3b82f6'} />))}</Bar></BarChart></ResponsiveContainer>
-            </div>
-         </div>
-         <div style={{ background: "white", borderRadius: "12px", padding: "25px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", overflowY: "auto" }}>
-            <h4 style={{ margin: "0 0 20px 0", color: "#ef4444", display: "flex", alignItems: "center", gap: "10px" }}><FaExclamationTriangle /> Active Safety Alerts</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>{alerts.map(alert => (<div key={alert.id} style={{ padding: "15px", background: "#fff1f2", borderRadius: "8px", borderLeft: `4px solid ${alert.color}` }}><div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: "bold", color: "#9f1239", fontSize: "0.95rem" }}>{alert.icon} {alert.title}</div><div style={{ marginLeft: "26px", fontSize: "0.85rem", color: "#be123c", marginTop: "5px" }}>{alert.loc}</div></div>))}</div>
-         </div>
+      <div><h2 style={{ color: "#0f172a", marginBottom: "10px", fontSize: "2.5rem" }}>Welcome, Admin Dashboard</h2></div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "25px" }}> 
+        <div style={cardStyle} onClick={() => setActiveTab('Live Tracking')}><div><FaShip size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Live Tracking</div></div></div>
+        <div style={cardStyle} onClick={() => setActiveTab('Vessels')}><div><FaClipboardList size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Vessels DB</div></div></div>
+        <div style={cardStyle} onClick={() => setActiveTab('Ports')}><div><FaAnchor size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Ports</div></div></div>
+        <div style={cardStyle} onClick={() => setActiveTab('Voyages')}><div><FaCompass size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Voyages</div></div></div> 
+        <div style={cardStyle} onClick={() => setActiveTab('Vessels')}><div><FaBell size={28} color="#0ea5e9" style={{marginBottom: "15px"}} /><div style={{fontWeight: "800", color: "#1e293b", fontSize: "1.2rem"}}>Alerts</div></div></div>
       </div>
     </div>
   );
@@ -327,8 +292,8 @@ const VesselsDatabaseView = ({ vessels, selectedVessel, setSelectedVessel, subsc
             <div style={{ flex: 1, overflowY: "auto", padding: "10px" }}>
                {filteredVessels.map(ship => (
                   <div key={ship.id} onClick={() => setSelectedVessel(ship)} style={{ padding: "15px", marginBottom: "10px", borderRadius: "8px", cursor: "pointer", border: selectedVessel.id === ship.id ? "1px solid #2563eb" : "1px solid transparent", background: selectedVessel.id === ship.id ? "#eff6ff" : "white", borderLeft: selectedVessel.id === ship.id ? "4px solid #2563eb" : "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                     <div><div style={{ fontWeight: "bold", fontSize: "0.95rem", color: "#1e293b" }}>{ship.name}</div><div style={{ fontSize: "0.8rem", color: "#64748b" }}>IMO: {ship.imo}</div></div>
-                     {subscribedVessels.includes(ship.id) && <FaBell color="#16a34a" />}
+                      <div><div style={{ fontWeight: "bold", fontSize: "0.95rem", color: "#1e293b" }}>{ship.name}</div><div style={{ fontSize: "0.8rem", color: "#64748b" }}>IMO: {ship.imo}</div></div>
+                      {subscribedVessels.includes(ship.id) && <FaBell color="#16a34a" />}
                   </div>
                ))}
             </div>
@@ -359,7 +324,7 @@ const VesselsDatabaseView = ({ vessels, selectedVessel, setSelectedVessel, subsc
 const LiveTrackingView = ({ vessels, selectedVessel, setSelectedVessel, subscribedVessels, onOpenAlertModal, addNotification, onUpdatePositions }) => {
   const [selectedCategories, setSelectedCategories] = useState(["Cargo", "Tanker", "Container", "LNG"]);
   const [selectedFlags, setSelectedFlags] = useState([]);
-  const [isUpdating, setIsUpdating] = useState(false); // Local state for button spinner
+  const [isUpdating, setIsUpdating] = useState(false); 
 
   const filteredVessels = vessels.filter(ship => {
     const typeMatch = selectedCategories.length === 0 || selectedCategories.some(cat => ship.type.includes(cat));
@@ -370,28 +335,22 @@ const LiveTrackingView = ({ vessels, selectedVessel, setSelectedVessel, subscrib
   const toggleCategory = (cat) => {
     if (selectedCategories.includes(cat)) {
       setSelectedCategories(prev => prev.filter(c => c !== cat));
-      addNotification("Filter Updated", `Hidden category: ${cat}`, "info");
     } else {
       setSelectedCategories(prev => [...prev, cat]);
-      addNotification("Filter Updated", `Shown category: ${cat}`, "info");
     }
   };
 
   const toggleFlag = (flag) => {
     if (selectedFlags.includes(flag)) {
       setSelectedFlags(prev => prev.filter(f => f !== flag));
-      addNotification("Filter Updated", `Hidden flag: ${flag}`, "info");
     } else {
       setSelectedFlags(prev => [...prev, flag]);
-      addNotification("Filter Updated", `Shown flag: ${flag}`, "info");
     }
   };
 
   const handleUpdateClick = () => {
       setIsUpdating(true);
-      // Call the parent handler
-      onUpdatePositions();
-      // Reset loading state after a delay
+      if (onUpdatePositions) onUpdatePositions();
       setTimeout(() => setIsUpdating(false), 1000);
   };
 
@@ -419,7 +378,6 @@ const LiveTrackingView = ({ vessels, selectedVessel, setSelectedVessel, subscrib
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", gap: "15px" }}>
         <div style={{ flex: 1, position: "relative", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", border: "1px solid #e2e8f0" }}>
-            {/* PASSING SAFETY ZONES TO MAP COMPONENT */}
             <MapComponent vessels={filteredVessels} selectedVessel={selectedVessel} setSelectedVessel={setSelectedVessel} safetyZones={safetyZones} />
         </div>
         {selectedVessel && (
@@ -432,7 +390,6 @@ const LiveTrackingView = ({ vessels, selectedVessel, setSelectedVessel, subscrib
                  <div><div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#94a3b8" }}>CARGO TYPE</div><div style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155" }}>{selectedVessel.cargo}</div></div>
                  <div><div style={{ fontSize: "0.7rem", fontWeight: "bold", color: "#94a3b8" }}>POSITION</div><div style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155" }}>{selectedVessel.lat.toFixed(4)} N, {selectedVessel.lng.toFixed(4)} E</div></div>
               </div>
-              <div style={{ marginLeft: "20px" }}><button onClick={() => onOpenAlertModal(true)} style={{ background: "#e0f2fe", color: "#0284c7", border: "none", padding: "10px 15px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}><FaBell /> Enable Alerts</button></div>
           </div>
         )}
       </div>
@@ -445,26 +402,16 @@ const MainDashboard = ({ onLogout, userProfile }) => {
   const [vessels, setVessels] = useState(initialVessels); 
   const [portStats, setPortStats] = useState(initialPortData); 
   const [tradeStats, setTradeStats] = useState(initialTradeData); 
-  const [selectedVessel, setSelectedVessel] = useState(initialVessels[0]); // Default to first ship
+  const [selectedVessel, setSelectedVessel] = useState(initialVessels[0]); 
   const [activeTab, setActiveTab] = useState("Dashboard"); 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [isNotifPanelOpen, setIsNotifPanelOpen] = useState(false);
-
-  // States for VesselDatabase View
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterCriteria, setFilterCriteria] = useState({ categories: [], flags: [] });
-
-  const [subscribedVessels, setSubscribedVessels] = useState(() => {
-    const saved = localStorage.getItem("subscribedVessels");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("subscribedVessels", JSON.stringify(subscribedVessels));
-  }, [subscribedVessels]);
+  const [subscribedVessels, setSubscribedVessels] = useState([]);
 
   const addNotification = (title, message, type="info") => {
     const newNotif = { id: Date.now(), title, message, type, time: new Date().toLocaleTimeString() };
@@ -483,7 +430,6 @@ const MainDashboard = ({ onLogout, userProfile }) => {
     }
   };
 
-  // --- BUTTON ACTIONS ---
   const handleRefresh = () => {
       toast.loading("Fetching latest satellite data...", { duration: 1500 });
       setTimeout(() => {
@@ -493,21 +439,17 @@ const MainDashboard = ({ onLogout, userProfile }) => {
       }, 1500);
   };
 
-  // UPDATED: handleSimulate also updates positions immediately
   const handleSimulate = () => {
-      // 1. Move ships randomly
       setVessels(prev => prev.map(v => ({
           ...v,
           lat: v.lat + (Math.random() - 0.5) * 2, 
           lng: v.lng + (Math.random() - 0.5) * 2,
           speed: (Math.random() * 20).toFixed(1)
       })));
-      // 2. Randomize Port Stats
       setPortStats(prev => prev.map(p => ({ ...p, wait: Math.max(1, Math.floor(Math.random() * 40)) })));
       toast.success("Positions & Stats Updated", { icon: "🚀" });
   };
 
-  // --- BACKGROUND SIMULATION ENGINE ---
   useEffect(() => {
     const vesselInterval = setInterval(() => {
       setVessels(prevVessels => prevVessels.map(v => ({
@@ -516,32 +458,32 @@ const MainDashboard = ({ onLogout, userProfile }) => {
         lng: v.lng + (Math.random() - 0.5) * 0.02
       })));
     }, 3000); 
-
     const portInterval = setInterval(() => {
       setPortStats(prevStats => prevStats.map(p => ({
         ...p,
         wait: Math.max(2, p.wait + Math.floor((Math.random() - 0.5) * 3))
       })));
     }, 5000); 
-
-    return () => {
-      clearInterval(vesselInterval);
-      clearInterval(portInterval);
-    };
+    return () => { clearInterval(vesselInterval); clearInterval(portInterval); };
   }, []);
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f1f5f9" }}>
-      {/* HEADER */}
+      {/* HEADER WITH TABS */}
       <div style={{ background: "white", padding: "0px 25px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", height: "70px", flexShrink: 0, boxShadow: "0 2px 4px rgba(0,0,0,0.02)", zIndex: 2000, position: "relative" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
            <div style={{ position: "relative", width: "42px", height: "42px", background: "linear-gradient(135deg, #0ea5e9 0%, #0f172a 100%)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 6px -1px rgba(14, 165, 233, 0.25)", transform: "rotate(-3deg)" }}><FaCompass size={22} color="white" style={{ transform: "rotate(3deg)" }} /></div>
-           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}><h1 style={{ margin: "0", fontSize: "1.4rem", fontWeight: "900", background: "linear-gradient(to right, #0f172a, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.5px", lineHeight: "1" }}>MVTPS</h1></div>
+           <h1 style={{ margin: "0", fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>MVTPS</h1>
         </div>
-        <div style={{ display: "flex", gap: "30px", fontSize: "0.95rem", fontWeight: "600", color: "#64748b", height: "100%" }}>{["Dashboard", "Vessels", "Ports", "Live Tracking"].map((tab) => (<div key={tab} onClick={() => setActiveTab(tab)} style={{ display: "flex", alignItems: "center", cursor: "pointer", height: "100%", borderBottom: activeTab === tab ? "3px solid #0ea5e9" : "3px solid transparent" }}>{tab}</div>))}</div>
+        {/* TAB NAVIGATION */}
+        <div style={{ display: "flex", gap: "30px", fontSize: "0.95rem", fontWeight: "600", color: "#64748b", height: "100%" }}>
+            {["Dashboard", "Vessels", "Ports", "Live Tracking", "Voyages"].map((tab) => (
+                <div key={tab} onClick={() => setActiveTab(tab)} style={{ display: "flex", alignItems: "center", cursor: "pointer", height: "100%", borderBottom: activeTab === tab ? "3px solid #0ea5e9" : "3px solid transparent", color: activeTab === tab ? "#0ea5e9" : "#64748b" }}>{tab}</div>
+            ))}
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-           <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setIsNotifPanelOpen(!isNotifPanelOpen)}><FaBell color="#94a3b8" size={20} />{notifications.length > 0 && <div style={{ position: "absolute", top: "-5px", right: "-5px", width: "16px", height: "16px", background: "red", borderRadius: "50%", color: "white", fontSize: "0.6rem", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>{notifications.length}</div>}</div>
-           <div style={{ width: "36px", height: "36px", background: "#f1f5f9", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: "2px solid white", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }} onClick={() => setIsProfileOpen(true)}><span style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#475569" }}>{userProfile.initials}</span></div>
+           <div onClick={() => setIsNotifPanelOpen(!isNotifPanelOpen)}><FaBell color="#94a3b8" size={20} /></div>
+           <div onClick={() => setIsProfileOpen(true)}><span style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#475569" }}>{userProfile.initials}</span></div>
         </div>
       </div>
 
@@ -574,13 +516,15 @@ const MainDashboard = ({ onLogout, userProfile }) => {
                 subscribedVessels={subscribedVessels} 
                 onOpenAlertModal={setIsAlertModalOpen} 
                 addNotification={addNotification}
-                onUpdatePositions={handleSimulate} // WIRED UP HERE
+                onUpdatePositions={handleSimulate} 
             />
         )}
+        {activeTab === "Voyages" && (<VoyagesView />)}
       </div>
+
       {isNotifPanelOpen && <NotificationPanel notifications={notifications} onClose={() => setIsNotifPanelOpen(false)} onClear={() => setNotifications([])} />}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} onLogout={onLogout} userProfile={userProfile} />
-      <AlertSettingsModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} vessel={selectedVessel} isSubscribed={selectedVessel ? subscribedVessels.includes(selectedVessel.id) : false} onToggleSubscription={toggleSubscription} />
+      <AlertSettingsModal isOpen={isAlertModalOpen} onClose={() => setIsAlertModalOpen(false)} vessel={selectedVessel} isSubscribed={false} onToggleSubscription={()=>{}} />
       <Toaster />
     </div>
   );
@@ -595,10 +539,7 @@ const Dashboard = ({ onLogout }) => {
       const token = localStorage.getItem("token");
       try {
         const res = await axios.get("http://127.0.0.1:8000/api/dashboard/", { headers: { Authorization: `Bearer ${token}` } });
-        let displayName = "Akhila T.", displayInitials = "AT";
-        if(res.data.username === "operator_user") { displayName = "Vessel Operator"; displayInitials = "VO"; }
-        if(res.data.username === "admin_user") { displayName = "System Admin"; displayInitials = "SA"; }
-        setUserProfile({ name: displayName, role: res.data.role.toUpperCase(), initials: displayInitials });
+        setUserProfile({ name: "Akhila T.", role: res.data.role.toUpperCase(), initials: "AT" });
       } catch (err) {
         setUserProfile({ name: "Akhila T.", role: "SENIOR ANALYST", initials: "AT" });
       }

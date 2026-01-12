@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User, Vessel, Port, Event
+# 1. We added 'Voyage' to the imports here
+from .models import User, Vessel, Port, Event, Voyage
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,8 +12,16 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-# --- NEW SERIALIZER FOR MAP (Milestone 2) ---
 class VesselSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vessel
         fields = ['id', 'name', 'vessel_type', 'flag', 'latitude', 'longitude', 'status']
+
+# --- NEW: VOYAGE SERIALIZER (Add this part) ---
+class VoyageSerializer(serializers.ModelSerializer):
+    # This grabs the vessel name so the frontend can display "Ever Given" instead of "ID: 1"
+    vessel_name = serializers.CharField(source='vessel.name', read_only=True)
+
+    class Meta:
+        model = Voyage
+        fields = ['id', 'vessel_name', 'port_from', 'port_to', 'departure_time', 'arrival_time', 'status']

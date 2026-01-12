@@ -1,63 +1,92 @@
-// --- DYNAMIC PORTS ANALYTICS VIEW ---
-const PortsAnalyticsView = ({ portData, tradeData }) => {
-  // 1. CALCULATE REAL METRICS FROM DATA (Data Types Implementation)
-  const totalWait = portData.reduce((acc, curr) => acc + curr.wait, 0);
-  const avgWait = (totalWait / portData.length).toFixed(1); // One decimal place
+import React, { useEffect, useState } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, 
+  AreaChart, Area 
+} from 'recharts';
+import { FaExchangeAlt, FaShip, FaAnchor } from 'react-icons/fa';
 
-  const totalArrivals = portData.reduce((acc, curr) => acc + curr.arrivals, 0);
-  const totalDepartures = portData.reduce((acc, curr) => acc + curr.departures, 0);
-  const efficiencyScore = Math.round((totalArrivals / (totalArrivals + totalDepartures)) * 100); // Simple mock efficiency logic
+const PortAnalytics = () => {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
 
-  const congestedPorts = portData.filter(p => p.wait > 30).length;
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/port-stats/')
+      .then(res => {
+        if (!res.ok) throw new Error("Backend Connection Failed");
+        return res.json();
+      })
+      .then(fetchedData => setData(fetchedData))
+      .catch(err => {
+        console.error("Fetch Error:", err);
+        setError("Could not connect to Django. Is the server running?");
+      });
+  }, []);
+
+  // LOADING STATE
+  if (error) return <div className="p-10 text-red-600 font-bold text-center">{error}</div>;
+  if (!data) return <div className="p-10 text-blue-600 font-bold text-center text-xl">Loading Live UNCTAD Data...</div>;
+
+  // DATA IS READY
+  const { kpi, charts } = data;
+  const congestedPorts = charts.port_data.filter(p => p.wait > 3).length;
 
   return (
-    <div style={{ padding: "30px", width: "100%", maxWidth: "1400px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "30px", height: "100%", overflowY: "auto" }}>
+    <div style={{ padding: "30px", background: "#f8fafc", minHeight: "100vh" }}>
       
-      {/* HEADER WITH UNCTAD LINK */}
-      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-        <div>
-           <h2 style={{ color: "#0f172a", marginBottom: "5px", fontSize: "2rem" }}>Port Analytics & UNCTAD Stats</h2>
-           <p style={{ color: "#64748b", margin: 0 }}>Real-time calculated metrics from live port feeds.</p>
-        </div>
-        <a href="https://unctadstat.unctad.org/datacentre/" target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none", background: "#0ea5e9", color: "white", padding: "10px 20px", borderRadius: "8px", fontWeight: "bold", display:"flex", alignItems:"center", gap:"10px" }}>
-            <FaExternalLinkAlt /> UNCTAD Data Source
-        </a>
+      {/* HEADER - BUTTON IS GONE */}
+      <div style={{ marginBottom: "30px" }}>
+           <h2 style={{ fontSize: "2rem", fontWeight: "bold", color: "#0f172a", marginBottom: "5px" }}>Port Analytics & UNCTAD Stats</h2>
+           <p style={{ color: "#64748b", fontSize: "1rem" }}>
+             Real-time maritime trade statistics & congestion monitoring.
+           </p>
       </div>
 
-      {/* DYNAMIC KPI CARDS (Now linked to Data Types) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "25px" }}>
+      {/* KPI CARDS */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "25px", marginBottom:"30px" }}>
          
-         {/* CARD 1: AVERAGE WAIT TIME */}
-         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", borderLeft: avgWait > 20 ? "5px solid #f59e0b" : "5px solid #10b981" }}>
-            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Global Average Wait Time</div>
-            <div style={{ fontSize: "2rem", color: "#0f172a", fontWeight: "bold", margin: "10px 0" }}>{avgWait} Hrs</div>
-            <div style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "5px", color: avgWait > 20 ? "#d97706" : "#16a34a" }}>
-                {avgWait > 20 ? <FaArrowUp /> : <FaArrowDown />} 
-                {avgWait > 20 ? "Above Average" : "Optimal Efficiency"}
+         {/* LSCI CARD */}
+         <div style={{ background: "white", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", borderLeft: "5px solid #2563eb" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: "700", letterSpacing: "0.5px" }}>CONNECTIVITY INDEX (LSCI)</div>
+                <FaAnchor style={{ color: "#2563eb", opacity: 0.5 }} />
+            </div>
+            <div style={{ fontSize: "2.5rem", color: "#0f172a", fontWeight: "800" }}>{kpi.connectivity_index}</div>
+            <div style={{ color: "#16a34a", fontSize: "0.9rem", fontWeight: "500", marginTop: "5px" }}>
+               Official UNCTAD Score ({kpi.connectivity_year})
             </div>
          </div>
 
-         {/* CARD 2: CONGESTION ALERTS */}
-         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", borderLeft: congestedPorts > 0 ? "5px solid #ef4444" : "5px solid #2563eb" }}>
-            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>High Congestion Ports</div>
-            <div style={{ fontSize: "2rem", color: congestedPorts > 0 ? "#ef4444" : "#2563eb", fontWeight: "bold", margin: "10px 0" }}>{congestedPorts}</div>
-            <div style={{ color: "#64748b", fontSize: "0.8rem" }}>Ports with wait > 30 hrs</div>
+         {/* TRAFFIC CARD */}
+         <div style={{ background: "white", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", borderLeft: "5px solid #8b5cf6" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: "700", letterSpacing: "0.5px" }}>PORT THROUGHPUT</div>
+                <FaExchangeAlt style={{ color: "#8b5cf6", opacity: 0.5 }} />
+            </div>
+            <div style={{ fontSize: "2.5rem", color: "#0f172a", fontWeight: "800" }}>{kpi.port_traffic}</div>
+            <div style={{ color: "#64748b", fontSize: "0.9rem", marginTop: "5px" }}>
+               {kpi.traffic_year} Total Volume
+            </div>
          </div>
-
-         {/* CARD 3: TRAFFIC VOLUME */}
-         <div style={{ background: "white", padding: "20px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", borderLeft: "5px solid #3b82f6" }}>
-            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "bold", textTransform: "uppercase" }}>Total Vessel Movements</div>
-            <div style={{ fontSize: "2rem", color: "#0f172a", fontWeight: "bold", margin: "10px 0" }}>{totalArrivals + totalDepartures}</div>
-            <div style={{ color: "#16a34a", fontSize: "0.8rem" }}>{totalArrivals} Arrivals / {totalDepartures} Departures</div>
+         
+         {/* CONGESTION CARD */}
+         <div style={{ background: "white", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)", borderLeft: congestedPorts > 0 ? "5px solid #ef4444" : "5px solid #10b981" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: "700", letterSpacing: "0.5px" }}>CONGESTION ALERT</div>
+                <FaShip style={{ color: congestedPorts > 0 ? "#ef4444" : "#10b981", opacity: 0.5 }} />
+            </div>
+            <div style={{ fontSize: "2.5rem", color: "#0f172a", fontWeight: "800" }}>{congestedPorts} Ports</div>
+            <div style={{ color: congestedPorts > 0 ? "#ef4444" : "#10b981", fontSize: "0.9rem", fontWeight: "500", marginTop: "5px" }}>
+               {congestedPorts > 0 ? "Exceeding Wait Thresholds" : "Traffic Flow Normal"}
+            </div>
          </div>
       </div>
 
-      {/* CHARTS ROW 1 */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "25px", minHeight: "300px" }}>
-         <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <h4 style={{ margin: "0 0 20px 0", color: "#334155", display: "flex", alignItems: "center", gap: "10px" }}><FaExchangeAlt /> Trade Volume (UNCTAD)</h4>
-            <ResponsiveContainer width="100%" height={250}>
-               <AreaChart data={tradeData}>
+      {/* CHARTS */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "25px" }}>
+         <div style={{ background: "white", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+            <h4 style={{ marginBottom: "20px", color: "#334155", fontWeight: "600" }}>Global Trade Volume Trends</h4>
+            <ResponsiveContainer width="100%" height={280}>
+               <AreaChart data={charts.trade_data}>
                   <defs>
                     <linearGradient id="colorImport" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
@@ -68,48 +97,30 @@ const PortsAnalyticsView = ({ portData, tradeData }) => {
                       <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}} />
                   <Legend />
                   <Area type="monotone" dataKey="import" stroke="#8884d8" fillOpacity={1} fill="url(#colorImport)" />
                   <Area type="monotone" dataKey="export" stroke="#82ca9d" fillOpacity={1} fill="url(#colorExport)" />
                </AreaChart>
             </ResponsiveContainer>
          </div>
-         <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-            <h4 style={{ margin: "0 0 20px 0", color: "#334155" }}>Average Vessel Wait Time (Hrs)</h4>
-            <ResponsiveContainer width="100%" height={250}>
-               <BarChart data={portData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="wait" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40}>
-                    {/* Visual Alert Logic: Red if > 30 */}
-                    {portData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.wait > 30 ? '#ef4444' : '#3b82f6'} />
+         
+         <div style={{ background: "white", padding: "25px", borderRadius: "12px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+            <h4 style={{ marginBottom: "20px", color: "#334155", fontWeight: "600" }}>Vessel Wait Times (Hrs)</h4>
+            <ResponsiveContainer width="100%" height={280}>
+               <BarChart data={charts.port_data}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'}} />
+                  <Bar dataKey="wait" radius={[6, 6, 0, 0]} barSize={40}>
+                    {charts.port_data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.wait > 3 ? '#ef4444' : '#3b82f6'} />
                     ))}
                   </Bar>
-               </BarChart>
-            </ResponsiveContainer>
-         </div>
-      </div>
-
-      {/* CHARTS ROW 2: ARRIVALS vs DEPARTURES */}
-      <div style={{ background: "white", padding: "25px", borderRadius: "10px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
-         <h4 style={{ margin: "0 0 20px 0", color: "#334155", display: "flex", alignItems: "center", gap: "10px" }}><FaSyncAlt /> Port Traffic Flow (Arrivals vs Departures)</h4>
-         <div style={{ width: "100%", height: "250px" }}>
-            <ResponsiveContainer>
-               <BarChart data={portData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{fontSize: 12}} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="arrivals" name="Arrivals" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="departures" name="Departures" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                </BarChart>
             </ResponsiveContainer>
          </div>
@@ -117,3 +128,5 @@ const PortsAnalyticsView = ({ portData, tradeData }) => {
     </div>
   );
 };
+
+export default PortAnalytics;
