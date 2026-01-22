@@ -338,7 +338,7 @@ const VoyagesView = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/voyages/')
+    fetch('https://mvtps.onrender.com/api/voyages/')
       .then(res => res.json()).then(data => { setVoyages(data); setLoading(false); })
       .catch(err => {
         setVoyages([

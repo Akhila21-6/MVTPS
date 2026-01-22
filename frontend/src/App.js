@@ -22,7 +22,7 @@ function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/token/", {
+      const res = await axios.post("https://mvtps.onrender.com/api/token/", {
         username,
         password,
       });
