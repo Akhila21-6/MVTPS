@@ -4,11 +4,12 @@ import Dashboard from "./Dashboard";
 import "./App.css";
 
 function App() {
-  // --- STATE MANAGEMENT ---
+  // --- STATE ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [role, setRole] = useState("ADMIN"); // Restored Role State
-  
+  const [role, setRole] = useState("ADMIN"); // Role Selector
+  const [showPassword, setShowPassword] = useState(false); // Toggle Eye Logic
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState(""); 
@@ -16,7 +17,7 @@ function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // --- CHECK LOGIN STATUS ---
+  // --- CHECK LOGIN ON LOAD ---
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) setIsLoggedIn(true);
@@ -28,8 +29,17 @@ function App() {
     setLoading(true);
     setError("");
 
+    // 1. Check Hardcoded Credentials FIRST (Ensures you can always access)
+    if (username === "admin_user" && password === "testpass1") {
+      setTimeout(() => { // Small fake delay for realism
+        setIsLoggedIn(true);
+        setLoading(false);
+      }, 500);
+      return; 
+    }
+
+    // 2. If not hardcoded, try the Real Backend
     try {
-      // 1. Try Real Backend Login
       const res = await axios.post("https://mvtps.onrender.com/api/token/", {
         username,
         password,
@@ -37,13 +47,7 @@ function App() {
       localStorage.setItem("token", res.data.access);
       setIsLoggedIn(true);
     } catch (err) {
-      // 2. Fallback for your specific credentials (admin_user)
-      if (username === "admin_user" && password === "testpass1") {
-        console.log("Using Fallback Login");
-        setIsLoggedIn(true);
-      } else {
-        setError("Invalid credentials. Please try again.");
-      }
+      setError("Invalid credentials. Try: admin_user / testpass1");
     } finally {
       setLoading(false);
     }
@@ -56,7 +60,6 @@ function App() {
     setError("");
 
     try {
-      // Connects to the backend registration endpoint
       await axios.post("https://mvtps.onrender.com/api/user/register/", {
         username,
         email,
@@ -64,7 +67,7 @@ function App() {
       });
       
       alert("Account created successfully! Please login.");
-      setIsRegisterMode(false); 
+      setIsRegisterMode(false); // Go back to login
       setUsername("");
       setPassword("");
       
@@ -72,8 +75,7 @@ function App() {
       if (err.response && err.response.status === 400) {
         setError("Username or Email already exists.");
       } else {
-        // If backend isn't updated yet, show this specific error
-        setError("Registration failed. (Did you update the backend?)");
+        setError("Registration failed. (Ensure backend is deployed)");
       }
     } finally {
       setLoading(false);
@@ -87,30 +89,28 @@ function App() {
       <div className="login-card">
         
         <div className="logo-icon">⚓</div>
-        
-        {/* Dynamic Title */}
         <h2>{isRegisterMode ? "Create Account" : "Welcome to MVTPS"}</h2>
         <p className="subtitle">Maritime Vessel Tracking & Port Systems</p>
 
-        {/* --- ROLE SELECTOR (Only show when Logging In) --- */}
+        {/* --- ROLE SELECTOR (Hidden in Register Mode) --- */}
         {!isRegisterMode && (
           <div className="role-selector">
             <button 
-              type="button"
+              type="button" 
               className={`role-btn ${role === "ADMIN" ? "active" : ""}`}
               onClick={() => setRole("ADMIN")}
             >
               ADMIN
             </button>
             <button 
-              type="button"
+              type="button" 
               className={`role-btn ${role === "ANALYST" ? "active" : ""}`}
               onClick={() => setRole("ANALYST")}
             >
               ANALYST
             </button>
             <button 
-              type="button"
+              type="button" 
               className={`role-btn ${role === "OPERATOR" ? "active" : ""}`}
               onClick={() => setRole("OPERATOR")}
             >
@@ -130,12 +130,11 @@ function App() {
               className="form-input" 
               value={username} 
               onChange={(e) => setUsername(e.target.value)} 
-              placeholder={isRegisterMode ? "Choose a username" : "Enter Username"}
+              placeholder="Enter Username"
               required 
             />
           </div>
 
-          {/* Email only for Registration */}
           {isRegisterMode && (
             <div className="input-group">
               <label>Email Address</label>
@@ -152,28 +151,40 @@ function App() {
 
           <div className="input-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              className="form-input" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="••••••••"
-              required 
-            />
+            <div className="password-wrapper">
+              <input 
+                type={showPassword ? "text" : "password"} // Toggles between text and password
+                className="form-input password-input" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="••••••••"
+                required 
+              />
+              {/* THE EYE ICON */}
+              <span 
+                className="eye-icon"
+                onClick={() => setShowPassword(!showPassword)}
+                role="button"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </span>
+            </div>
           </div>
 
-          {/* BUTTON 1: ACCESS DASHBOARD / SIGN UP */}
+          {/* MAIN BUTTON */}
           <button type="submit" className="access-btn" disabled={loading}>
             {loading ? "Processing..." : (isRegisterMode ? "Sign Up" : "Access Dashboard")}
           </button>
 
-          {/* BUTTON 2: TOGGLE REGISTER */}
+          {/* REGISTER TOGGLE BUTTON */}
           <button 
             type="button" 
             className="register-link-btn"
             onClick={() => {
                 setIsRegisterMode(!isRegisterMode);
                 setError("");
+                setUsername("");
+                setPassword("");
             }}
           >
             {isRegisterMode ? "Back to Login" : "New User? Register Here"}

@@ -7,7 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Dark Maritime Background */
+  /* Maritime Port Background */
   background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)),
               url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
   background-size: cover;
@@ -24,11 +24,7 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.logo-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  display: block;
-}
+.logo-icon { font-size: 2.5rem; margin-bottom: 0.5rem; display: block; }
 
 .login-card h2 {
   color: #0f172a;
@@ -37,13 +33,9 @@
   margin-bottom: 0.2rem;
 }
 
-.subtitle {
-  margin-bottom: 20px;
-  color: #64748b;
-  font-size: 0.9rem;
-}
+.subtitle { margin-bottom: 20px; color: #64748b; font-size: 0.9rem; }
 
-/* --- ROLE SELECTOR STYLES (Restored) --- */
+/* --- ROLE BUTTONS --- */
 .role-selector {
   display: flex;
   justify-content: center;
@@ -63,9 +55,7 @@
   transition: all 0.2s;
 }
 
-.role-btn:hover {
-  background: #f8fafc;
-}
+.role-btn:hover { background: #f8fafc; }
 
 .role-btn.active {
   background: white;
@@ -74,11 +64,8 @@
   box-shadow: 0 0 0 1px #0ea5e9;
 }
 
-/* --- FORM STYLES --- */
-.input-group {
-  margin-bottom: 1rem;
-  text-align: left;
-}
+/* --- INPUTS & EYE ICON --- */
+.input-group { margin-bottom: 1rem; text-align: left; }
 
 .input-group label {
   display: block;
@@ -97,17 +84,31 @@
   background-color: #f8fafc;
 }
 
-.form-input:focus {
-  outline: none;
-  border-color: #0ea5e9;
-  background-color: white;
+/* Password Wrapper for Eye Icon */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* Main Button */
+.password-input {
+  padding-right: 40px; /* Make room for the eye */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 12px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  user-select: none;
+  background: transparent;
+}
+
+/* --- BUTTONS --- */
 .access-btn {
   width: 100%;
   padding: 12px;
-  background-color: #0f172a; /* Dark Navy */
+  background-color: #0f172a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -117,11 +118,8 @@
   font-size: 1rem;
 }
 
-.access-btn:hover {
-  background-color: #1e293b;
-}
+.access-btn:hover { background-color: #1e293b; }
 
-/* Register Toggle Link */
 .register-link-btn {
   background: none;
   border: none;
@@ -130,12 +128,9 @@
   font-size: 0.9rem;
   margin-top: 20px;
   cursor: pointer;
-  text-decoration: none;
+  width: 100%;
 }
-
-.register-link-btn:hover {
-  text-decoration: underline;
-}
+.register-link-btn:hover { text-decoration: underline; }
 
 .error-msg {
   background-color: #fee2e2;
