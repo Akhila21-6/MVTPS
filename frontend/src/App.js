@@ -4,19 +4,24 @@ import Dashboard from "./Dashboard";
 import "./App.css";
 
 function App() {
+  // --- STATE ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState(""); 
+  
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // --- CHECK LOGIN ON LOAD ---
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) setIsLoggedIn(true);
   }, []);
 
+  // --- LOGIN FUNCTION ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -29,26 +34,62 @@ function App() {
       localStorage.setItem("token", res.data.access);
       setIsLoggedIn(true);
     } catch (err) {
-      if (username === "admin_user" && password === "testpass1") setIsLoggedIn(true);
-      else setError("Invalid credentials");
+      // Fallback for demo admin
+      if (username === "admin_user" && password === "testpass1") {
+        setIsLoggedIn(true);
+      } else {
+        setError("Invalid credentials. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegister = (e) => {
+  // --- REGISTER FUNCTION (REAL BACKEND) ---
+  const handleRegister = async (e) => {
     e.preventDefault();
-    alert("Registration feature coming soon!");
-    setIsRegisterMode(false);
+    setLoading(true);
+    setError(""); // Clear previous errors
+
+    try {
+      // This sends the data to your NEW backend endpoint
+      await axios.post("https://mvtps.onrender.com/api/user/register/", {
+        username,
+        email,
+        password
+      });
+      
+      // Success!
+      alert("Account created successfully! You can now login.");
+      setIsRegisterMode(false); // Switch back to login screen automatically
+      setUsername(""); // Clear form for fresh login
+      setPassword("");
+      
+    } catch (err) {
+      // Error handling
+      console.error(err);
+      if (err.response && err.response.status === 400) {
+        // This handles "Username already exists" from Django
+        setError("Username or Email already exists.");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (isLoggedIn) return <Dashboard />;
+  // --- RENDER DASHBOARD ---
+  if (isLoggedIn) {
+    return <Dashboard />;
+  }
 
+  // --- RENDER LOGIN / REGISTER PORTAL ---
   return (
     <div className="login-container">
       <div className="login-card">
         
-        {/* --- RESTORED HEADER --- */}
+        {/* HEADER */}
         <div className="logo-icon">⚓</div>
         <h2>{isRegisterMode ? "Create Account" : "MVTPS Portal"}</h2>
         <p className="subtitle">Maritime Vessel Tracking & Port Safety</p>
@@ -92,18 +133,20 @@ function App() {
             />
           </div>
 
-          {/* --- RESTORED BUTTON (SECURE LOGIN) --- */}
-          <button type="submit" className="access-btn">
-            {isRegisterMode ? "SIGN UP" : "SECURE LOGIN"}
+          {/* BUTTON 1: SUBMIT (Dynamic Text) */}
+          <button type="submit" className="access-btn" disabled={loading}>
+            {loading ? "Processing..." : (isRegisterMode ? "SIGN UP" : "SECURE LOGIN")}
           </button>
 
-          {/* --- NEW REGISTER BUTTON (Inserted Here) --- */}
+          {/* BUTTON 2: TOGGLE MODE */}
           <button 
             type="button" 
             className="register-btn"
             onClick={() => {
                 setIsRegisterMode(!isRegisterMode);
                 setError("");
+                setUsername("");
+                setPassword("");
             }}
           >
             {isRegisterMode ? "Back to Login" : "New User? Register Here"}
@@ -111,7 +154,6 @@ function App() {
 
         </form>
 
-        {/* --- RESTORED FOOTER --- */}
         <p className="footer-text">Authorized Personnel Only</p>
 
       </div>
