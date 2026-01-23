@@ -10,56 +10,114 @@
   background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)),
               url('https://images.unsplash.com/photo-1559297434-fae8a1916a79?auto=format&fit=crop&w=1920&q=80');
   background-size: cover;
+  background-position: center;
 }
 
 .login-card {
   background: white;
   padding: 2.5rem;
-  border-radius: 12px;
+  border-radius: 16px; /* Slightly more rounded like previous version */
   width: 90%;
-  max-width: 400px;
+  max-width: 420px;
   text-align: center;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.logo-icon { font-size: 3rem; margin-bottom: 0.5rem; display: block; }
-.subtitle { margin-bottom: 20px; color: #64748b; font-size: 0.9rem; }
+.logo-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+  display: block;
+}
 
-.input-group { margin-bottom: 1rem; text-align: left; }
-.input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #334155; }
+.login-card h2 {
+  color: #0f172a;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.subtitle {
+  margin-bottom: 25px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700; /* Bolder label like previous version */
+  margin-bottom: 0.4rem;
+  color: #334155;
+}
 
 .form-input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.8rem;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.95rem;
+  background-color: #f8fafc;
 }
 
-/* BUTTONS */
+/* === BUTTON 1: SECURE LOGIN (Bright Blue) === */
 .access-btn {
   width: 100%;
   padding: 14px;
-  background-color: #0f172a;
+  background-color: #0ea5e9; /* The Bright Blue you liked */
   color: white;
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase; /* Makes it say SECURE LOGIN */
   cursor: pointer;
   margin-top: 10px;
   display: block;
+  transition: background 0.2s;
 }
 
+.access-btn:hover {
+  background-color: #0284c7;
+}
+
+/* === BUTTON 2: REGISTER (Clean Outline) === */
 .register-btn {
   width: 100%;
   padding: 12px;
-  background-color: white;
-  color: #0ea5e9;
-  border: 2px solid #0ea5e9;
-  border-radius: 6px;
-  font-weight: 700;
+  background-color: transparent;
+  color: #64748b; /* Subtle grey-blue */
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
   margin-top: 15px;
   display: block;
+  transition: all 0.2s;
 }
-.register-btn:hover { background-color: #f0f9ff; }
+
+.register-btn:hover {
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+  background-color: #f0f9ff;
+}
+
+.footer-text {
+  margin-top: 20px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.error-msg {
+  background-color: #fee2e2;
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}

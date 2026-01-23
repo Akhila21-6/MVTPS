@@ -6,7 +6,6 @@ import "./App.css";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState(""); 
@@ -23,7 +22,6 @@ function App() {
     setLoading(true);
     setError("");
     try {
-      // Trying to connect to your live backend
       const res = await axios.post("https://mvtps.onrender.com/api/token/", {
         username,
         password,
@@ -50,10 +48,10 @@ function App() {
     <div className="login-container">
       <div className="login-card">
         
-        {/* UNIQUE TITLE TO VERIFY UPDATE */}
+        {/* --- RESTORED HEADER --- */}
         <div className="logo-icon">⚓</div>
-        <h2>{isRegisterMode ? "Create Account" : "MVTPS - FINAL VERSION"}</h2>
-        <p className="subtitle">Maritime Vessel Tracking</p>
+        <h2>{isRegisterMode ? "Create Account" : "MVTPS Portal"}</h2>
+        <p className="subtitle">Maritime Vessel Tracking & Port Safety</p>
 
         {error && <div className="error-msg">{error}</div>}
 
@@ -94,12 +92,12 @@ function App() {
             />
           </div>
 
-          {/* BUTTON 1: ACCESS DASHBOARD */}
+          {/* --- RESTORED BUTTON (SECURE LOGIN) --- */}
           <button type="submit" className="access-btn">
-            {isRegisterMode ? "Sign Up" : "Access Dashboard"}
+            {isRegisterMode ? "SIGN UP" : "SECURE LOGIN"}
           </button>
 
-          {/* BUTTON 2: REGISTER (Stacked Below) */}
+          {/* --- NEW REGISTER BUTTON (Inserted Here) --- */}
           <button 
             type="button" 
             className="register-btn"
@@ -112,6 +110,10 @@ function App() {
           </button>
 
         </form>
+
+        {/* --- RESTORED FOOTER --- */}
+        <p className="footer-text">Authorized Personnel Only</p>
+
       </div>
     </div>
   );
