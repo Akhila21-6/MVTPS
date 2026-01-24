@@ -7,7 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Maritime Port Background */
+  /* Dark Maritime Background */
   background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)),
               url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
   background-size: cover;
@@ -24,7 +24,14 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.logo-icon { font-size: 2.5rem; margin-bottom: 0.5rem; display: block; }
+.logo-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
 .login-card h2 {
   color: #0f172a;
@@ -33,9 +40,13 @@
   margin-bottom: 0.2rem;
 }
 
-.subtitle { margin-bottom: 20px; color: #64748b; font-size: 0.9rem; }
+.subtitle {
+  margin-bottom: 20px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
 
-/* --- ROLE BUTTONS --- */
+/* --- ROLE SELECTOR --- */
 .role-selector {
   display: flex;
   justify-content: center;
@@ -64,7 +75,7 @@
   box-shadow: 0 0 0 1px #0ea5e9;
 }
 
-/* --- INPUTS & EYE ICON --- */
+/* --- FORM INPUTS --- */
 .input-group { margin-bottom: 1rem; text-align: left; }
 
 .input-group label {
@@ -84,7 +95,14 @@
   background-color: #f8fafc;
 }
 
-/* Password Wrapper for Eye Icon */
+.form-input:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* --- EYE ICON STYLES --- */
 .password-wrapper {
   position: relative;
   display: flex;
@@ -92,17 +110,18 @@
 }
 
 .password-input {
-  padding-right: 40px; /* Make room for the eye */
+  padding-right: 40px; /* Space for the eye */
 }
 
 .eye-icon {
   position: absolute;
   right: 12px;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: #94a3b8;
   user-select: none;
-  background: transparent;
 }
+.eye-icon:hover { color: #475569; }
 
 /* --- BUTTONS --- */
 .access-btn {
@@ -116,10 +135,12 @@
   cursor: pointer;
   margin-top: 10px;
   font-size: 1rem;
+  transition: background 0.2s;
 }
 
 .access-btn:hover { background-color: #1e293b; }
 
+/* The "Register Here" Link */
 .register-link-btn {
   background: none;
   border: none;
@@ -129,8 +150,13 @@
   margin-top: 20px;
   cursor: pointer;
   width: 100%;
+  text-decoration: none;
 }
-.register-link-btn:hover { text-decoration: underline; }
+
+.register-link-btn:hover {
+  text-decoration: underline;
+  color: #0284c7;
+}
 
 .error-msg {
   background-color: #fee2e2;

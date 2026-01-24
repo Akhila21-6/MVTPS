@@ -6,9 +6,9 @@ import "./App.css";
 function App() {
   // --- STATE ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [role, setRole] = useState("ADMIN"); // Role Selector
-  const [showPassword, setShowPassword] = useState(false); // Toggle Eye Logic
+  const [isRegisterMode, setIsRegisterMode] = useState(false); // Controls Login vs Register view
+  const [role, setRole] = useState("ADMIN"); // Default Role
+  const [showPassword, setShowPassword] = useState(false); // Eye Icon toggle
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,28 +17,27 @@ function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // --- CHECK LOGIN ON LOAD ---
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) setIsLoggedIn(true);
   }, []);
 
-  // --- LOGIN FUNCTION ---
+  // --- LOGIN LOGIC ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // 1. Check Hardcoded Credentials FIRST (Ensures you can always access)
+    // 1. Fallback for your Admin Credentials (ALWAYS WORKS)
     if (username === "admin_user" && password === "testpass1") {
-      setTimeout(() => { // Small fake delay for realism
+      setTimeout(() => {
         setIsLoggedIn(true);
         setLoading(false);
       }, 500);
       return; 
     }
 
-    // 2. If not hardcoded, try the Real Backend
+    // 2. Try Real Backend Login
     try {
       const res = await axios.post("https://mvtps.onrender.com/api/token/", {
         username,
@@ -53,7 +52,7 @@ function App() {
     }
   };
 
-  // --- REGISTER FUNCTION ---
+  // --- REGISTER LOGIC ---
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -67,7 +66,7 @@ function App() {
       });
       
       alert("Account created successfully! Please login.");
-      setIsRegisterMode(false); // Go back to login
+      setIsRegisterMode(false); // Switch back to Login screen
       setUsername("");
       setPassword("");
       
@@ -75,7 +74,7 @@ function App() {
       if (err.response && err.response.status === 400) {
         setError("Username or Email already exists.");
       } else {
-        setError("Registration failed. (Ensure backend is deployed)");
+        setError("Registration failed. (Check backend connection)");
       }
     } finally {
       setLoading(false);
@@ -89,10 +88,11 @@ function App() {
       <div className="login-card">
         
         <div className="logo-icon">⚓</div>
+        {/* Dynamic Title */}
         <h2>{isRegisterMode ? "Create Account" : "Welcome to MVTPS"}</h2>
         <p className="subtitle">Maritime Vessel Tracking & Port Systems</p>
 
-        {/* --- ROLE SELECTOR (Hidden in Register Mode) --- */}
+        {/* --- ROLE SELECTOR (Only visible during Login) --- */}
         {!isRegisterMode && (
           <div className="role-selector">
             <button 
@@ -130,11 +130,12 @@ function App() {
               className="form-input" 
               value={username} 
               onChange={(e) => setUsername(e.target.value)} 
-              placeholder="Enter Username"
+              placeholder={isRegisterMode ? "Choose a username" : "Enter Username"}
               required 
             />
           </div>
 
+          {/* Email Field (Only visible during Register) */}
           {isRegisterMode && (
             <div className="input-group">
               <label>Email Address</label>
@@ -153,14 +154,14 @@ function App() {
             <label>Password</label>
             <div className="password-wrapper">
               <input 
-                type={showPassword ? "text" : "password"} // Toggles between text and password
+                type={showPassword ? "text" : "password"} // Toggles type
                 className="form-input password-input" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 placeholder="••••••••"
                 required 
               />
-              {/* THE EYE ICON */}
+              {/* EYE ICON */}
               <span 
                 className="eye-icon"
                 onClick={() => setShowPassword(!showPassword)}
@@ -176,7 +177,7 @@ function App() {
             {loading ? "Processing..." : (isRegisterMode ? "Sign Up" : "Access Dashboard")}
           </button>
 
-          {/* REGISTER TOGGLE BUTTON */}
+          {/* --- MISSING REGISTER BUTTON (ADDED HERE) --- */}
           <button 
             type="button" 
             className="register-link-btn"
